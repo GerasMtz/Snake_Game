@@ -2,157 +2,73 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-#region Snake
 public class Snake : MonoBehaviour
 {
+    //Create and declared a Array like List type where add the body for the snake 
+    //when eat the apple
+    public List<Transform> _body = new List<Transform>();
+    //Prefab is a Object thas save in Unity like a model or objectecycle
+    //create in Unity
+    //_bodyPrefab and use for specify what is the component to add for the List
+    public Transform _bodyPrefab;
 
-    #region Properties
-
-    /// <summary>
-
-    /// Varible tipo enum que asigna a las variables left, right,
-
-    ///up y down, valores constantes que no cambiaran en el transcurso de
-
-    ///la ejecucion del programa
-
-    /// </summary>
-
-    //Estados o movimientos que puede tomar el player
-
-    enum Movements
-    {
-
-        left,//Movimiento de la Serpiente a la Izquierda
-
-        right,//Movimiento de la Serpiente a la Derecha
-
-        up,//Movimiento de la Serpiente a Arriba
-
-        down//Movimiento de la Serpiente a Abajo 
-
-    }
-
-    //Declaramos una variable de tipo Movements que se llama movement
-
-    //para almacenar el movimiento que el player realice desde el teclado
+    public Transform _tailPrefab;
+    enum Movements { left, right, up, down }
 
     Movements _movement;
-
-
-    public List<Transform> tail;
-    public float updateRate = 0.5f;
-    public float stepRate;
-
-    public GameObject tailPrefab;
+    public float _frameRate = 0.02f;
+    public float _nextStep = 0.16f;
+    Vector3 _lastPos;
 
     public Vector2 verticalLimits;
     public Vector2 horizontalLimits;
 
-    public float _frameRate = 0.2f;
-
-    //declaramos la variable nextStep para almacenar la distancia que se moveria por cada frameRate
-
-    //la serpiente en este caso avanzaria cada 16 px
-
-    public float _nextStep = 0.16f;
-
-    //Declaramos una variable de tipo Vector3 que almacene la ultima posicion de la serpiente
-
-    Vector3 _lastPos;
-
-    public Collider2D _gridArea;
-
-    #endregion
-
-    #region Start
-
-    // Start is called before the first frame update
-
+    public BoxCollider2D _gridArea;
     void Start()
-
     {
         RandomizePosition();
+        transform.localRotation = Quaternion.Euler(0, 0, -90);
+        _body[0].rotation = Quaternion.Euler(0, 0, 90);
         InvokeRepeating("Move", _frameRate, _frameRate);
-
     }
-
-    #endregion
-
-    #region Methods
-
-    //Declaramos el metodo Move en este caso no regresa nada, solo revisa la ultima posicion de la serpiente
-
     void Move()
     {
 
-        //que esta en la variable lastPos y se le asigna la propiedad transform.position
-
         _lastPos = transform.position;
-
-        //Declaramos una varibale local nextPos de tipo Vector3 que inicialmente tomara los valores de 0 para
-
-        //la posicion del vector
-
         Vector3 nextPos = Vector3.zero;
-
-        //comparamos el valor almacenado en la variable movement y la comparamos con alguna de las
-
-        //acciones realizadas en la variable enum Movements
-
         if (_movement == Movements.up)
         {
-
-            //Si cumple con algunas de las acciones asignamos a la variable nextPos los valores del objeto
-
-            //Vector3.movimiento en este caso hacia arriba
-
             nextPos = Vector3.up;
-
         }
         else if (_movement == Movements.down)
         {
-
-            //Vector3.movimiento en este caso hacia abjao
-
             nextPos = Vector3.down;
-
         }
         else if (_movement == Movements.left)
         {
-
-            //Vector3.movimiento en este caso hacia la izquierda
-
             nextPos = Vector3.left;
-
         }
         else if (_movement == Movements.right)
         {
-
-            //Vector3.movimiento en este caso hacia la derecha
-
             nextPos = Vector3.right;
-
         }
-
-        //ya que esta actualizado la variable con el movimiento que desea realizar el player
-
-        //incrementamos el valor de nextPos multiplicando por el valor que avanza cada frame
-
-        //que esta alamcenado en la variable nextStep
-
         nextPos *= _nextStep;
-
-        //ahora ese valor de nextPos se lo asignamos a la propiedad transform.position para que actualice
-
-        //los nuevos valores del vector postion en el trandform del Inspector
-
         transform.position += nextPos;
-
+        MoveBody();
     }
+    public void MoveBody()
+    {
+        for (int i = 0; i < _body.Count; i++)
+        {
+            Vector3 temp = _body[i].position;
+            _body[i].position = _lastPos;
+            _lastPos = temp;
+        }
+    }
+
     public void RandomizePosition()
     {
-        Bounds bounds = _gridArea.bounds;
+        Bounds bounds = this._gridArea.bounds;
 
         // Pick a random position inside the bounds
         float x = Random.Range(bounds.min.x, bounds.max.x);
@@ -165,74 +81,59 @@ public class Snake : MonoBehaviour
         transform.position = new Vector2(x, y);
     }
 
-
-    #endregion
-
-    #region Update
-
-    // Update is called once per frame
-
     void Update()
-
     {
-
-        //Compararemos las entradas del player para compararlas con los movimeintos que estan
-
-        //declarados en la variable Movements left, right, up y down.
-
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
-
-            //Si cumple asignamos ese valor a la variable derivada de Movements : movement hacia arriba
-
             _movement = Movements.up;
-
+            transform.localRotation = Quaternion.Euler(0, 0, 180);
+            for (int i = 0; i < _body.Count; i++)
+            {
+                _body[i].rotation = Quaternion.Euler(0, 0, 180);
+            }
         }
         else if (Input.GetKeyDown(KeyCode.DownArrow))
         {
-
-            //Si cumple asignamos ese valor a la variable derivada de Movements : movement hacia abajo
-
             _movement = Movements.down;
-
+            transform.localRotation = Quaternion.Euler(0, 0, 0);
+            for (int i = 0; i < _body.Count; i++)
+            {
+                _body[i].rotation = Quaternion.Euler(0, 0, 0);
+            }
         }
         else if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-
-            //Si cumple asignamos ese valor a la variable derivada de Movements : movement hacia la izquierda
-
             _movement = Movements.left;
-
+            transform.localRotation = Quaternion.Euler(0, 0, -90);
+            for (int i = 0; i < _body.Count; i++)
+            {
+                _body[i].rotation = Quaternion.Euler(0, 0, -90);
+            }
         }
         else if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-
-            //Si cumple asignamos ese valor a la variable derivada de Movements : movement hacia la derecha
-
             _movement = Movements.right;
-
+            transform.localRotation = Quaternion.Euler(0, 0, 90);
+            for (int i = 0; i < _body.Count; i++)
+            {
+                _body[i].rotation = Quaternion.Euler(0, 0, 90);
+            }
         }
-
     }
-
     void OnTriggerEnter2D(Collider2D collider)
     {
         if (collider.CompareTag("Borders"))
         {
-            print("Juego Terminado ");
-
+            print("Game Over");
             UnityEngine.SceneManagement.SceneManager.LoadScene(0);
         }
         else if (collider.CompareTag("Apple"))
         {
-            print("Eat Apple");
+            print("Eat the apple");
+            _body.Add(Instantiate(_bodyPrefab, _body[_body.Count - 1]
+            .position, Quaternion.identity).transform);
             collider.transform.position = new Vector2(Random.Range(horizontalLimits.x, horizontalLimits.y), Random.Range(verticalLimits.x, verticalLimits.y));
         }
     }
-
-    #endregion
-
 }
-
-#endregion
 
